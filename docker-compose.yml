@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: prontus-postgres
+    environment:
+      POSTGRES_DB: prontus
+      POSTGRES_USER: prontus
+      POSTGRES_PASSWORD: prontus123
+    ports:
+      - "5433:5432"
+    volumes:
+      - prontus-pgdata:/var/lib/postgresql/data
+
+volumes:
+  prontus-pgdata:
