@@ -1,6 +1,7 @@
 package br.com.fiap.prontus.patient.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +18,8 @@ public class Patient {
     private LocalDate birthDate;
     @Column(name = "comorbidities", columnDefinition = "TEXT")
     private String comorbidities;
-    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     protected Patient(){

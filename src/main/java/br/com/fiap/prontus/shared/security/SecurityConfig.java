@@ -15,9 +15,17 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos do MVP (liberados temporariamente até o JWT)
                         .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/api/patients/**").permitAll()
-                        .anyRequest().authenticated()   // os demais endpoints entram no JWT na sequência
+                        .requestMatchers("/api/triages/**").permitAll()
+                        .requestMatchers("/api/queue/**").permitAll()
+                        // Swagger / OpenAPI (para o vídeo de demonstração)
+                        .requestMatchers(
+                                "/swagger-ui.html", "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 );
         return http.build();
     }

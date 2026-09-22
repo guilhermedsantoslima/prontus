@@ -1,6 +1,7 @@
 package br.com.fiap.prontus.triage.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -25,10 +26,11 @@ public class Triage {
     @Column(name = "ticket_code", nullable = false, unique = true, length = 10)
     private String ticketCode;
 
-    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    protected Triage() {}
+    public Triage() {}
 
     public Long getId() {
         return id;

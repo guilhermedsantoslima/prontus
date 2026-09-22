@@ -1,6 +1,7 @@
 package br.com.fiap.prontus.queue.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,13 +32,14 @@ public class QueueEntry {
     @Column(nullable = false, length = 15)
     private String status = "WAITING";
 
-    @Column(name = "enqueued_at", nullable = false, insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "enqueued_at", nullable = false)
     private LocalDateTime enqueuedAt;
 
     @Column(name = "called_at")
     private LocalDateTime calledAt;
 
-    protected QueueEntry(){
+    public QueueEntry(){
 
     }
 
