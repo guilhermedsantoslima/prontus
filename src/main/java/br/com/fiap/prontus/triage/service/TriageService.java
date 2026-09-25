@@ -4,6 +4,8 @@ import br.com.fiap.prontus.patient.model.Patient;
 import br.com.fiap.prontus.patient.repository.PatientRepository;
 import br.com.fiap.prontus.queue.model.QueueEntry;
 import br.com.fiap.prontus.queue.repository.QueueEntryRepository;
+import br.com.fiap.prontus.shared.events.PatientTriagedEvent;
+import br.com.fiap.prontus.shared.events.TriageEventPublisher;
 import br.com.fiap.prontus.shared.exception.NotFoundException;
 import br.com.fiap.prontus.triage.dto.TriageDTO;
 import br.com.fiap.prontus.triage.engine.TriageEngine;
@@ -26,13 +28,15 @@ public class TriageService {
     private final PatientRepository patientRepository;
     private final QueueEntryRepository queueEntryRepository;
     private final TriageEngine engine;
+    private final TriageEventPublisher eventPublisher;
 
     public TriageService(TriageRepository triageRepository, PatientRepository patientRepository,
-                         QueueEntryRepository queueEntryRepository, TriageEngine engine) {
+                         QueueEntryRepository queueEntryRepository, TriageEngine engine, TriageEventPublisher eventPublisher) {
         this.triageRepository = triageRepository;
         this.patientRepository = patientRepository;
         this.queueEntryRepository = queueEntryRepository;
         this.engine = engine;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -44,10 +48,8 @@ public class TriageService {
         int age = TriageEngine.ageFrom(patient.getBirthDate());
         TriageEngine.TriageResult result = engine.classify(request.symptoms(), age, hasComorbidity);
 
-        // 2. Emissão da senha sequencial por categoria
         String ticketCode = nextTicket(result.severity());
 
-        // 3. Persiste a triagem
         Triage triage = new Triage();
         triage.setPatientId(patient.getId());
         triage.setSymptoms(request.symptoms());
@@ -56,15 +58,24 @@ public class TriageService {
         triage.setTicketCode(ticketCode);
         triage = triageRepository.save(triage);
 
-        // 4. Enfileira com score efetivo inicial = score base (sem tempo de espera ainda)
-        QueueEntry entry = new QueueEntry();
-        entry.setTriageId(triage.getId());
-        entry.setPatientId(patient.getId());
-        entry.setBaseScore(result.riskScore());
-        entry.setTimeWeight(BigDecimal.valueOf(TriageEngine.TIME_WEIGHTS.get(result.severity())));
-        entry.setEffectiveScore(BigDecimal.valueOf(result.riskScore()));
-        entry.setStatus("WAITING");
-        queueEntryRepository.save(entry);
+//        QueueEntry entry = new QueueEntry();
+//        entry.setTriageId(triage.getId());
+//        entry.setPatientId(patient.getId());
+//        entry.setBaseScore(result.riskScore());
+//        entry.setTimeWeight(BigDecimal.valueOf(TriageEngine.TIME_WEIGHTS.get(result.severity())));
+//        entry.setEffectiveScore(BigDecimal.valueOf(result.riskScore()));
+//        entry.setStatus("WAITING");
+//        queueEntryRepository.save(entry);
+
+        eventPublisher.publish(new PatientTriagedEvent(
+                triage.getId(),
+                patient.getId(),
+                result.severity(),
+                result.riskScore(),
+                ticketCode,
+                java.math.BigDecimal.valueOf(TriageEngine.TIME_WEIGHTS.get(result.severity())),
+                java.time.LocalDateTime.now()
+        ));
 
         return toResponse(triage);
     }

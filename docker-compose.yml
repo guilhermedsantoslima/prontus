@@ -38,7 +38,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CLUSTER_ID: prontus-kafka-cluster-001
+      CLUSTER_ID: MkU3OEhBNVF4bVBrbU5xWQ
 
 volumes:
   prontus-pgdata:
