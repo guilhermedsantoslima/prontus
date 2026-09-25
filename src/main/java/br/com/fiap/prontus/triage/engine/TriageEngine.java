@@ -2,6 +2,7 @@ package br.com.fiap.prontus.triage.engine;
 
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Map;
@@ -16,10 +17,6 @@ public class TriageEngine {
             "RED", 1000, "ORANGE", 500, "YELLOW", 200, "GREEN", 50, "BLUE", 10
     );
 
-    public static final Map<String, Double> TIME_WEIGHTS = Map.of(
-         "RED", 0.0, "ORANGE", 0.02,"YELLOW", 0.5, "GREEN", 1.0, "BLUE", 0.01
-    );
-
     private static final Map<String, Set<String>> CRITICAL_RULES = Map.of(
             "RED", Set.of("dor toracica", "parada cardiorrespiratoria", "convulsao", "inconsciencia", "hemorragia grave"),
             "ORANGE", Set.of("dor abdominal intensa", "febre alta com rash", "desmaio", "fratura exposta", "falta de ar intensa"),
@@ -27,13 +24,20 @@ public class TriageEngine {
             "GREEN", Set.of("febre leve", "dor de cabeca leve", "resfriado", "tosse")
     );
 
-    public TriageResult classify(String symptons, int ageYears, boolean hasComorbidity){
-        String symptomText = symptons.toLowerCase();
+    public static final Map<String, BigDecimal> TIME_WEIGHTS = Map.of(
+            "RED", new BigDecimal("0.0"),   // Already absolute priority
+            "ORANGE", new BigDecimal("1.0"),
+            "YELLOW", new BigDecimal("2.5"),
+            "GREEN",  new BigDecimal("4.0"),
+            "BLUE",   new BigDecimal("4.0")
+    );
+    public TriageResult classify(String symptoms, int ageYears, boolean hasComorbidity) {
+        String symptomText = symptoms.toLowerCase();
 
         String category = "BLUE";
-        for (var entry : CRITICAL_RULES.entrySet()){
-            for (String keyword : entry.getValue()){
-                if (symptomText.contains(keyword)){
+        for (var entry : CRITICAL_RULES.entrySet()) {
+            for (String keyword : entry.getValue()) {
+                if (symptomText.contains(keyword)) {
                     category = entry.getKey();
                     break;
                 }
@@ -47,7 +51,9 @@ public class TriageEngine {
             category = promote(category);
             score = SEVERITY_SCORES.get(category);
         }
-        if (("GREEN".equals(category) || "ORANGE".equals(category)) && (ageYears <= 3 || ageYears >= 75)) {
+
+        if (("GREEN".equals(category) || "ORANGE".equals(category))
+                && (ageYears <= 3 || ageYears >= 75)) {
             category = promote(category);
             score = SEVERITY_SCORES.get(category);
         }
@@ -55,15 +61,15 @@ public class TriageEngine {
         return new TriageResult(category, score);
     }
 
-    private String promote(String severity){
-        return switch (severity){
+    private String promote(String severity) {
+        return switch (severity) {
             case "BLUE" -> "GREEN";
             case "GREEN" -> "YELLOW";
             case "YELLOW" -> "ORANGE";
+            case "ORANGE" -> "RED";
             default -> severity;
         };
     }
-
     public static int ageFrom(LocalDate birthDate){
         return Period.between(birthDate, LocalDate.now()).getYears();
     }

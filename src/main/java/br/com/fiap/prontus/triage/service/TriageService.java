@@ -73,7 +73,7 @@ public class TriageService {
                 result.severity(),
                 result.riskScore(),
                 ticketCode,
-                java.math.BigDecimal.valueOf(TriageEngine.TIME_WEIGHTS.get(result.severity())),
+                TriageEngine.TIME_WEIGHTS.get(result.severity()),
                 java.time.LocalDateTime.now()
         ));
 
