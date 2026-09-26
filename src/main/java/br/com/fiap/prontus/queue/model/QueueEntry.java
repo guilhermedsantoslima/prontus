@@ -23,6 +23,9 @@ public class QueueEntry {
     @Column(name = "base_score", nullable = false)
     private Integer baseScore;
 
+    @Column(name = "ticket_code")
+    private String ticketCode;
+
     @Column(name = "time_weight", nullable = false, precision = 6, scale = 3)
     private BigDecimal timeWeight;
 
@@ -113,5 +116,13 @@ public class QueueEntry {
 
     public void setCalledAt(LocalDateTime calledAt) {
         this.calledAt = calledAt;
+    }
+
+    public String getTicketCode() {
+        return ticketCode;
+    }
+
+    public void setTicketCode(String ticketCode) {
+        this.ticketCode = ticketCode;
     }
 }

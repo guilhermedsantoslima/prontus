@@ -2,6 +2,7 @@ package br.com.fiap.prontus.shared.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,6 +38,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
+                        // SSE stream: EventSource cannot send Authorization header
+                        // (conscious trade-off — exposes only the waiting list, no patient data)
+                        .requestMatchers(HttpMethod.GET, "/api/queue/stream").permitAll()
                         // RBAC
                         .requestMatchers("/api/patients/**").hasAnyRole("ENFERMEIRO", "MEDICO", "ADMIN")
                         .requestMatchers("/api/triages/**").hasAnyRole("ENFERMEIRO", "MEDICO", "ADMIN")

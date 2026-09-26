@@ -2,11 +2,12 @@ package br.com.fiap.prontus.queue.scheduler;
 
 import br.com.fiap.prontus.queue.model.QueueEntry;
 import br.com.fiap.prontus.queue.repository.QueueEntryRepository;
-import jakarta.transaction.Transactional;
+import br.com.fiap.prontus.queue.stream.QueueEventsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,9 +22,12 @@ public class QueueReorderingScheduler {
     private static final String STATUS_WAITING = "WAITING";
 
     private final QueueEntryRepository repository;
+    private final QueueEventsService queueEventsService;
 
-    public QueueReorderingScheduler(QueueEntryRepository repository) {
+    public QueueReorderingScheduler(QueueEntryRepository repository,
+                                    QueueEventsService queueEventsService) {
         this.repository = repository;
+        this.queueEventsService = queueEventsService;
     }
 
     @Scheduled(fixedRate = 60000)
@@ -59,7 +63,8 @@ public class QueueReorderingScheduler {
         if (changed) {
             repository.saveAll(waiting);
             log.info("Queue reordered: {} waiting entries re-evaluated", waiting.size());
-            // Phase 3 (next step): publish QueueReorderedEvent here for SSE notifications
+            // Real-time: push the reordered queue to all SSE clients
+            queueEventsService.broadcastQueueUpdate();
         }
     }
 }

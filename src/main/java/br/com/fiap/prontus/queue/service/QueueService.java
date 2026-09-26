@@ -2,11 +2,12 @@ package br.com.fiap.prontus.queue.service;
 
 import br.com.fiap.prontus.queue.model.QueueEntry;
 import br.com.fiap.prontus.queue.repository.QueueEntryRepository;
-import jakarta.transaction.Transactional;
+import br.com.fiap.prontus.queue.stream.QueueEventsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -19,12 +20,14 @@ public class QueueService {
     private static final String STATUS_CALLED = "CALLED";
 
     private final QueueEntryRepository repository;
+    private final QueueEventsService queueEventsService;
 
-    public QueueService(QueueEntryRepository repository) {
+    public QueueService(QueueEntryRepository repository,
+                        QueueEventsService queueEventsService) {
         this.repository = repository;
+        this.queueEventsService = queueEventsService;
     }
 
-    /** Calls the next patient in line (highest effective score first). */
     @Transactional
     public QueueEntry callNext() {
         QueueEntry next = repository
@@ -38,10 +41,12 @@ public class QueueService {
 
         log.info("Patient called: entryId={}, triageId={}, effectiveScore={}",
                 next.getId(), next.getTriageId(), next.getEffectiveScore());
+
+        // Real-time: called patient leaves the queue for all SSE clients
+        queueEventsService.broadcastQueueUpdate();
         return next;
     }
 
-    /** Calls a specific patient by queue entry id (override for priority cases). */
     @Transactional
     public QueueEntry callById(Long entryId) {
         QueueEntry entry = repository.findById(entryId)
@@ -59,6 +64,9 @@ public class QueueService {
 
         log.info("Patient called by id: entryId={}, triageId={}",
                 entry.getId(), entry.getTriageId());
+
+        // Real-time: called patient leaves the queue for all SSE clients
+        queueEventsService.broadcastQueueUpdate();
         return entry;
     }
 }
