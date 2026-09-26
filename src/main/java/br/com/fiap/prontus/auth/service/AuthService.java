@@ -26,7 +26,7 @@ public class AuthService {
         if (userRepository.existsByUsername(request.username())) {
             throw new ConflictException("Username already taken: " + request.username());
         }
-        Role role = request.role() != null ? request.role() : Role.PACIENTE;
+        Role role = request.role() != null ? request.role() : Role.PATIENT;
         User user = new User(request.username(), passwordEncoder.encode(request.password()), role);
         userRepository.save(user);
         return new AuthDto.AuthResponse(jwtService.generateToken(user.getUsername(), user.getRole().name()),
