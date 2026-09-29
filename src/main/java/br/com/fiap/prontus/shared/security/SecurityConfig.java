@@ -42,9 +42,9 @@ public class SecurityConfig {
                         // (conscious trade-off — exposes only the waiting list, no patient data)
                         .requestMatchers(HttpMethod.GET, "/api/queue/stream").permitAll()
                         // RBAC
-                        .requestMatchers("/api/patients/**").hasAnyRole("ENFERMEIRO", "MEDICO", "ADMIN")
-                        .requestMatchers("/api/triages/**").hasAnyRole("ENFERMEIRO", "MEDICO", "ADMIN")
-                        .requestMatchers("/api/queue/**").hasAnyRole("ENFERMEIRO", "MEDICO", "ADMIN")
+                        .requestMatchers("/api/patients/**").hasAnyRole("NURSE", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/triages/**").hasAnyRole("NURSE", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/queue/**").hasAnyRole("NURSE", "DOCTOR", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
